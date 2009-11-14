@@ -1,0 +1,12 @@
+#summary Stuff to do
+
+==Bugs==
+
+ * If the PM message is longer than a certain number, the remaining part of the message is visible to everyone in the room that the recipient is a part of.
+ * For some reason, multicast loopback cannot be disabled.
+ * Membership of a certain multicast address is not being dropped.
+
+==Add==
+
+ * Name changes to be retained across chat room changes.
+ * Allow PM when user outside chatroom.
