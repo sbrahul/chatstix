@@ -1,0 +1,15 @@
+#summary An embedded IRC like chat server
+#labels Phase-Design
+
+= Introduction =
+
+Chatstix is a chat server written in C, meant for running on OMAP 3530 processor using ARM architecture.
+
+
+= Features =
+
+Supports:
+ # Multiple chat rooms.
+ # Personal/instant messaging.
+ # Change of assigned name.
+ # Detection of ungraceful exit of client
