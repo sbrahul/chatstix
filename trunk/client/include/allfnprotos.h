@@ -10,5 +10,6 @@ BOOL servcommand(char *input);
 void parseandprint(char *str, int *recvfd);
 void *fnthreadr(void *params);
 void worker();
+void pinghandler();
 
 #endif /*ALLFNPROTOS_H_*/

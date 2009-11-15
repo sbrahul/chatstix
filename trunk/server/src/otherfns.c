@@ -241,7 +241,7 @@ void disconnectuser(char *rcvmsg, char *ip) {
         free(mrooms[roomnum].clientlist);
         mrooms[roomnum].inuse = 0;
     }
-    sprintf(pkt, "#adm#:drop:%d", id);
+    sprintf(pkt, "#adm#:%d:drop", id);
     sendpkt(ip, pkt, SENDPORT);
 }
 

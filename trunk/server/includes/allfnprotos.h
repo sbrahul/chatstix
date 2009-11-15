@@ -30,5 +30,7 @@ void joinuser(char *cbuf, char *ipaddr);
 int process_job(char *cbuf, char *ipaddr);
 void job_worker();
 void *threcvfn(void *targs);
+void setalarm();
+void pinghandler(char *input);
 
 #endif /*ALLFNPROTOS_H_*/
