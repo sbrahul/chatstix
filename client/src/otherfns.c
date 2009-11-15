@@ -1,5 +1,18 @@
 #include "../include/sockheads.h"
 
+//print wrapper
+
+void msg_print(char *msg, MsgType type) {
+    switch(type) {
+        case msgtypeerr:
+        case msgtypeinfo:
+        case msgtypepm:
+        case msgtypenorm:
+            printf("%s", msg);
+            break;
+    }
+}
+
 //add membership to multicast addr
 
 void add_memship(int *fd, char *addr, BOOL optval) {
@@ -50,18 +63,16 @@ BOOL servcommand(char *input) {
         return 1; //exit prog
     } else if (!strncmp(input, "/join ", 6)) {
         if (strlen(input) < 9) {
-            printf("Min room name length is 3!\n");
+            msg_print("Min room name length is 3!\n", msgtypeerr);
             return 0;
         }
-        if (!gsendfd)
-            gsendfd = createsocket(&sendaddr, "any", SERVPORT, UDP, B_NO);
         if (gflagstatus == notinroom)
             sendpkt(gservaddr, input, SERVPORT);
         else
-            printf("Already in a room. Disconnect from present to join another\n");
+            msg_print("Already in a room. Disconnect from present to join another\n", msgtypeerr);
     } else if (!(strncmp(input, "/disconnect", 11))) {
         if (gflagstatus == notinroom) {
-            printf("You are not in any room!\n");
+            msg_print("You are not in any room!\n", msgtypeerr);
             return 0;
         }
         sprintf(pkt, "/disconnect:%d", cliid);
@@ -72,13 +83,13 @@ BOOL servcommand(char *input) {
             sendpkt(gservaddr, pkt, SERVPORT);
          }
          else
-             printf("This command can only be used once inside a room\n");
-    } else if (!(strncmp(input, "/pm ", 4)) && strlen(input) > 5) {
+             msg_print("This command can only be used only inside a room\n", msgtypeinfo);
+    } else if (!(strncmp(input, "/pm ", 4)) && strlen(input) > 8) {
         if(gflagstatus == inroom) {
         token = strtok(input, delimit);
         token = strtok(NULL, delimit);
         if (strlen(token) < 3 || strlen(token) > MAXNAMELEN) {
-            printf("Invalid username! Please try again\n");
+            msg_print("Invalid username! Please try again\n", msgtypeerr);
             return 0;
         }
         if (strcmp(clicache.lastpmname, token)) {
@@ -88,15 +99,15 @@ BOOL servcommand(char *input) {
             if(clicache.lastpmerror)
                 return 0;
         }
-        token = input + 10;
+        token = input + (strlen(rndname) + 5); //strtok cannot be used, so manually set pointer to start of msg
         sprintf(pkt, "#pm#:%s:%s", rndname, token);
         sendpkt(clicache.lastpmip, pkt, MRECVPORT);
         }
         else
-             printf("This command can only be used once inside a room\n");
+             msg_print("This command can only be used only inside a room\n", msgtypeinfo);
     } else if (!strncmp(input, "/nick ", 6)) {
         if(strlen(input) < 9 || strlen(input) > 16) {
-            printf("Min length of name is 3, max is 10\n");
+            msg_print("Min length of name is 3, max is 10\n", msgtypeinfo);
             return 0;
         }
         token = strtok(input, delimit);
@@ -106,14 +117,14 @@ BOOL servcommand(char *input) {
         sprintf(pkt, "/nick:%d:%s", cliid, token);
         sendpkt(gservaddr, pkt, SERVPORT);
     } else if (!strncmp(input, "/help", 5))
-        printf("/join <room_name>\n/listusers\n/pm <user_name> <msg>\n"
-                "/nick <nick_name>\n/disconnect\n/quit\n");
+        msg_print("/join <room_name>\n/listusers\n/pm <user_name> <msg>\n"
+                "/nick <nick_name>\n/disconnect\n/quit\n", msgtypeinfo);
     else if (!strcmp(input, "!#quit")) {
         if (!gsendfd)
             gsendfd = createsocket(&sendaddr, "any", SERVPORT, UDP, B_NO);
         sendpkt(gservaddr, input, SERVPORT);
     } else
-        printf("Invalid command. type /help for help\n");
+        msg_print("Invalid command/syntax. type /help for help\n", msgtypeerr);
 
     return 0; //prog not exiting
 }
@@ -121,14 +132,14 @@ BOOL servcommand(char *input) {
 //parse received string
 
 void parseandprint(char *str, int *recvfd) {
-    char *search = ":", *token, buffer[MAXCLI];
-    BOOL colonflag = 0, admflag = 0;
+    char *search = ":", *token, buffer[255], msgbuffer[255];
+    BOOL colonflag = FALSE, admflag = FALSE, PMflag = FALSE;
     int id;
     token = strtok(str, search);
     while (token != NULL) {
         if (!strcmp(token, "#adm#")) {
             token = strtok(NULL, search);
-            admflag = 1;
+            admflag = TRUE;
             id = strtol(token, NULL, 10);
             if (id != -1)
                 if(id != cliid)
@@ -136,55 +147,55 @@ void parseandprint(char *str, int *recvfd) {
             token = strtok(NULL, search);
             if (!strcmp(token, "addr")) {
                 token = strtok(NULL, search);
-                printf("Multicast addr assigned is - %s\n", token);
+                sprintf(msgbuffer, "Multicast addr assigned is - %s\n", token);
+                msg_print(msgbuffer, msgtypeinfo);
                 add_memship(recvfd, token, TRUE);
                 strcpy(gmcastaddr, token);
                 break;
             } else if (!strcmp(token, "drop")) {
                 add_memship(recvfd, gmcastaddr, FALSE);
-                printf("Disconnected from current room\n");
+                msg_print("Disconnected from current room\n", msgtypeinfo);
                 gflagstatus = notinroom;
-                if (close(gsendfd) == -1)
-                    progerror("close send error");
-                gsendfd = 0;
                 break;
             } else if (!strcmp(token, "name")) {
                 token = strtok(NULL, search);
                 if (rndname != NULL) {
                     if(!strcmp(token, rndname)) {
-                        printf("Name already taken!\n");
+                        msg_print("Name already taken!\n", msgtypeinfo);
                         break;
                     }
                     free(rndname);
                 }
                 rndname = (char *) malloc((sizeof(char)) * (strlen(token)));
                 strcpy(rndname, token);
-                printf("Name changed to - %s\n", token);
+                sprintf(msgbuffer, "Name changed to - %s\n", token);
+                msg_print(msgbuffer, msgtypeinfo);
                 break;
             } else if (!strcmp(token, "id")) {
                 token = strtok(NULL, search);
                 //printf("Assigned id is - %s\n", token);
                 cliid = (int) strtol(token, NULL, 10);
                 gflagstatus = inroom;
-                printf("You can now start chatting\n");
+                msg_print("You can now start chatting\n", msgtypeinfo);
                 break;
             } else if (!strcmp(token, "roomsfull")) {
-                printf("All rooms full! PLease try after some time\n");
+                msg_print("All rooms full! PLease try after some time\n", msgtypeerr);
                 break;
             } else if (!strcmp(token, "clientsfull")) {
-                printf("Too many users! Please try after some time\n");
+                msg_print("Too many users! Please try after some time\n", msgtypeerr);
                 break;
             } else if (!strcmp(token, "users")) {
                 token = strtok(NULL, search);
-                printf("Number of users in room = %ld\n", strtol(token, NULL, 10));
-                printf("Users are:");
+                sprintf(msgbuffer, "Number of users in room = %ld\n", strtol(token, NULL, 10));
+                msg_print(msgbuffer, msgtypeinfo);
+                msg_print("Users are:", msgtypeinfo);
                 fflush(stdout);
-                colonflag = 1;
-                admflag = 0;
+                colonflag = TRUE;
+                admflag = FALSE;
             } else if (!strcmp(token, "pmip")) {
                 token = strtok(NULL, search);
                 if(!strcmp(token, "nosuchuser")) {
-                    printf("Sorry, no such username exists\n");
+                    msg_print("Sorry, no such username exists\n", msgtypeerr);
                     clicache.lastpmerror = 1;
                     sem_post(&semforpm);
                     break;
@@ -198,7 +209,7 @@ void parseandprint(char *str, int *recvfd) {
                 if(gflagstatus == notinroom)
                     break;
                 add_memship(recvfd, gmcastaddr, FALSE);
-                printf("Connection to server reset! Disconnected from current room\n");
+                msg_print("Connection to server reset! Disconnected from current room\n", msgtypeerr);
                 gflagstatus = notinroom;
                 if (close(gsendfd) == -1)
                     progerror("close send error");
@@ -209,16 +220,24 @@ void parseandprint(char *str, int *recvfd) {
                 break;
             }
         } else if(!strcmp(token, "#pm#")) {
-            printf("---PM---> ");
+            msg_print("---PM---> ", msgtypepm);
+            PMflag = TRUE;
             fflush(stdout);
         }
         else {
-            (colonflag == 0) ?
+            if(gflagstatus == notinroom) {
+                admflag = TRUE;
+                break;
+            }
+            (!colonflag) ?
                     sprintf(buffer, "%s:", token) :
                     sprintf(buffer, " %s", token);
-            printf("%s", buffer);
+            if (PMflag)
+                msg_print(buffer, msgtypepm);
+            else
+                msg_print(buffer, msgtypenorm);
             fflush(stdout);
-            colonflag = 1;
+            colonflag = TRUE;
         }
         token = strtok(NULL, search);
     }
@@ -253,7 +272,7 @@ void *fnthreadr(void *params) {
 void worker() {
     char sendline[MAXCLI + MAXNAMELEN], *replace, usrstr[MAXCLI];
     BOOL returnstatus;
-    printf("Welcome. Enter commands (/help for help)\n");
+    msg_print("Welcome. Enter commands (/help for help)\n", msgtypeinfo);
     while (1) {
         fgets(usrstr, MAXCLI, stdin);
         //printf("entered string is %s\n", usrstr);
@@ -264,7 +283,7 @@ void worker() {
             *replace = '\0';
         replace = strchr(usrstr, ':'); //no : allowed
         if (replace != NULL) {
-            printf("Sorry, No usage of ':' allowed\n");
+            msg_print("Sorry, No usage of ':' allowed\n", msgtypeerr);
             continue;
         }
         strcpy(clicache.lasttypedmsg, usrstr);

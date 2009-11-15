@@ -37,6 +37,9 @@
         <platform>2</platform>
       </toolsSet>
       <compileType>
+        <cTool>
+          <commandLine>-Wall</commandLine>
+        </cTool>
         <linkerTool>
           <linkerLibItems>
             <linkerLibStdlibItem>PosixThreads</linkerLibStdlibItem>
