@@ -122,12 +122,14 @@ int getmultiaddr(char *cbuf, char *addr, int clientid) {
 
 //fill in the infostr associated with the index
 void filluserinfo(int cid, int roomn, char *rid, char *ipaddr){
-    infostr[cid].inuse = 1;
+    if(infostr[cid].inuse == 0) {
+        infostr[cid].inuse = 1;
+        infostr[cid].cliname = (char *) malloc(NAMELEN * sizeof (char));
+        strcpy(infostr[cid].cliname, rid);
+        infostr[cid].cliipaddr = (char *) malloc(16 * sizeof (char));
+        strcpy(infostr[cid].cliipaddr, ipaddr);
+    }
     infostr[cid].room = roomn;
-    infostr[cid].cliname = (char *) malloc(NAMELEN * sizeof (char));
-    strcpy(infostr[cid].cliname, rid);
-    infostr[cid].cliipaddr = (char *) malloc(16 * sizeof (char));
-    strcpy(infostr[cid].cliipaddr, ipaddr);
 }
 
 //add a user to the clientlist in mroomstr
@@ -139,13 +141,14 @@ void addusertoroomlist(int cid, int roomn) {
 
 //remove user from roomlist
 
-int removeuserfromroomlist(int cid, int roomn) {
+void removeuserfromroomlist(int cid, int roomn) {
     *(mrooms[roomn].clientlist + cid) = 0;
     mrooms[roomn].numusers--;
-    if (mrooms[roomn].numusers)
-        return 0;
-    else
-        return 1;
+    if (!mrooms[roomn].numusers) {
+        free(mrooms[roomn].roomname);
+        free(mrooms[roomn].clientlist);
+        mrooms[roomn].inuse = 0;
+    }
 }
 
 //find if username exists
@@ -221,7 +224,22 @@ void *threcvfn(void *targs) {
     }
 }
 
-//handle /disconnect from user(remove user from room)
+//hendle /exitroom from user
+
+void removeuserfromroom(char *cbuf) {
+    char *delimiter = ":", *token, pkt[20];
+    int id, roomnum;
+    token = strtok(cbuf, delimiter);
+    token = strtok(NULL, delimiter);
+    id = (int) strtol(token, NULL, 10); //parse client id from msg
+    roomnum = infostr[id].room;
+    removeuserfromroomlist(id, roomnum);
+    infostr[id].room = -1;
+    sprintf(pkt, "#adm#:%d:drop", id);
+    sendpkt(infostr[id].cliipaddr, pkt, SENDPORT);
+}
+
+//handle /disconnect from user(remove user from db &| from room)
 
 void disconnectuser(char *rcvmsg, char *ip) {
     char *delimiter = ":", *token, pkt[20];
@@ -235,16 +253,13 @@ void disconnectuser(char *rcvmsg, char *ip) {
     free(infostr[id].cliname);
     free(infostr[id].cliipaddr);
     roomnum = infostr[id].room;
-    infostr[id].room = -1;
-    if (removeuserfromroomlist(id, roomnum)) {
-        free(mrooms[roomnum].roomname);
-        free(mrooms[roomnum].clientlist);
-        mrooms[roomnum].inuse = 0;
-    }
-    sprintf(pkt, "#adm#:%d:drop", id);
-    sendpkt(ip, pkt, SENDPORT);
+    if (roomnum != -1) {
+        infostr[id].room = -1;
+        removeuserfromroomlist(id, roomnum);
+        sprintf(pkt, "#adm#:%d:drop", id);
+        sendpkt(ip, pkt, SENDPORT);
 }
-
+}
 //handle /nick from user
 
 void namechange(char *cbuf) {
@@ -306,11 +321,21 @@ void getipofcli(char *cbuf, char *ipaddr) {
 //handle /join from user
 
 void joinuser(char *cbuf, char *ipaddr) {
-    char multiaddr[16], pkt[30];
-    int cid, roomn;
-    char rid[NAMELEN];
+    char multiaddr[16], pkt[30], *token, *delimiter = ":";
+    int cid, roomn, idinpackettobesent;
+    char rid[MAXNAMELEN];
     struct timeval tv;
-    cid = findfreeuserslot(); //get index of first free cliinfostr
+    token = strchr(cbuf, ':');
+    if(token !=NULL) {
+        token = strtok(cbuf, delimiter);
+        token = strtok(NULL, delimiter);
+        cid = (int) strtol(token, NULL, 10); //parse client id from msg
+        idinpackettobesent = cid;
+    }
+    else {
+        cid = findfreeuserslot(); //get index of first free cliinfostr
+        idinpackettobesent = -1;
+    }
     printf("id assigned is - %d\n", cid);
     if (cid == -1) //all client slots full
     {
@@ -330,15 +355,22 @@ void joinuser(char *cbuf, char *ipaddr) {
     printf("TP:in process_job(), got multicast addr\n");
 #endif
     printf("Allocated %s to %s\n", multiaddr, ipaddr);
-    sprintf(pkt, "#adm#:-1:addr:%s", multiaddr);
+    sprintf(pkt, "#adm#:%d:addr:%s", idinpackettobesent, multiaddr);
     sendpkt(ipaddr, pkt, SENDPORT);
-    crandgen(rid);
-    filluserinfo(cid, roomn, rid, ipaddr);
+    if (idinpackettobesent == -1) {
+        crandgen(rid);
+        filluserinfo(cid, roomn, rid, ipaddr);
+        sprintf(pkt, "#adm#:-1:name:%s", rid);
+        usleep(500000);
+        sendpkt(ipaddr, pkt, SENDPORT);
+        usleep(500000);
+        sprintf(pkt, "#adm#:-1:id:%d", cid);
+        sendpkt(ipaddr, pkt, SENDPORT);
+    }
+    else
+        filluserinfo(cid, roomn, NULL, NULL);
     usleep(500000);
-    sprintf(pkt, "#adm#:-1:name:%s", rid);
-    usleep(500000);
-    sendpkt(ipaddr, pkt, SENDPORT);
-    sprintf(pkt, "#adm#:-1:id:%d", cid);
+    sprintf(pkt, "#adm#:%d:inroom", cid);
     sendpkt(ipaddr, pkt, SENDPORT);
 #ifdef TRACEPRINT
     printf("TP:in process_job(), packet sent\n");
@@ -356,8 +388,10 @@ int process_job(char *cbuf, char *ipaddr) {
     //printf("message received is %s\n", cbuf);
     if (!strncmp(cbuf, "/join", 5))
         joinuser(cbuf, ipaddr);
-    else if (!strncmp(cbuf, "/disconnect", 11))
+    else if (!strncmp(cbuf, "/exit", 5))
         disconnectuser(cbuf, ipaddr);
+    else if (!strncmp(cbuf, "/leaveroom", 9))
+        removeuserfromroom(cbuf);
     else if (!strncmp(cbuf, "/listusers", 10))
         listusers(cbuf);
     else if (!strncmp(cbuf, "/getip", 6))

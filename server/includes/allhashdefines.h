@@ -17,6 +17,7 @@
 #define FALSE 0
 #define RECVPORT 9107
 #define SENDPORT 8007
+#define MAXNAMELEN 10
 #define NAMELEN 6
 #define MAXCLI 30
 #define MAXROOMS 20

@@ -55,8 +55,8 @@ BOOL servcommand(char *input) {
     char pkt[20], *token, *delimit = " ";
     struct sockaddr_in sendaddr;
     if (!strcmp(input, "/quit")) {
-        if (gflagstatus == inroom) {
-            sprintf(pkt, "/disconnect:%d", cliid);
+        if (gflagstatus != notinroom) {
+            sprintf(pkt, "/exit:%d", cliid);
             sendpkt(gservaddr, pkt, SERVPORT);
         }
         gflagstatus = exitprog;
@@ -66,16 +66,21 @@ BOOL servcommand(char *input) {
             msg_print("Min room name length is 3!\n", msgtypeerr);
             return 0;
         }
-        if (gflagstatus == notinroom)
-            sendpkt(gservaddr, input, SERVPORT);
-        else
+        if (gflagstatus == inroom)
             msg_print("Already in a room. Disconnect from present to join another\n", msgtypeerr);
-    } else if (!(strncmp(input, "/disconnect", 11))) {
-        if (gflagstatus == notinroom) {
+        else {
+            if(gflagstatus == availforpm)
+                sprintf(pkt, "%s:%d", input, cliid);
+            else
+                sprintf(pkt, "%s", input);
+            sendpkt(gservaddr, pkt, SERVPORT);
+        }
+    } else if (!(strncmp(input, "/leaveroom", 10))) {
+        if (gflagstatus == availforpm) {
             msg_print("You are not in any room!\n", msgtypeerr);
             return 0;
         }
-        sprintf(pkt, "/disconnect:%d", cliid);
+        sprintf(pkt, "/leaveroom:%d", cliid);
         sendpkt(gservaddr, pkt, SERVPORT);
     } else if (!strcmp(input, "/listusers")) {
          if(gflagstatus == inroom) {
@@ -85,7 +90,7 @@ BOOL servcommand(char *input) {
          else
              msg_print("This command can only be used only inside a room\n", msgtypeinfo);
     } else if (!(strncmp(input, "/pm ", 4)) && strlen(input) > 8) {
-        if(gflagstatus == inroom) {
+        if(gflagstatus == inroom || gflagstatus == availforpm) {
         token = strtok(input, delimit);
         token = strtok(NULL, delimit);
         if (strlen(token) < 3 || strlen(token) > MAXNAMELEN) {
@@ -104,10 +109,14 @@ BOOL servcommand(char *input) {
         sendpkt(clicache.lastpmip, pkt, MRECVPORT);
         }
         else
-             msg_print("This command can only be used only inside a room\n", msgtypeinfo);
+             msg_print("This command can only be used once connected to server. Try /connect\n", msgtypeinfo);
     } else if (!strncmp(input, "/nick ", 6)) {
         if(strlen(input) < 9 || strlen(input) > 16) {
             msg_print("Min length of name is 3, max is 10\n", msgtypeinfo);
+            return 0;
+        }
+        if (gflagstatus == notinroom) {
+            msg_print("You must connect to the server first\n", msgtypeerr);
             return 0;
         }
         token = strtok(input, delimit);
@@ -117,8 +126,8 @@ BOOL servcommand(char *input) {
         sprintf(pkt, "/nick:%d:%s", cliid, token);
         sendpkt(gservaddr, pkt, SERVPORT);
     } else if (!strncmp(input, "/help", 5))
-        msg_print("/join <room_name>\n/listusers\n/pm <user_name> <msg>\n"
-                "/nick <nick_name>\n/disconnect\n/quit\n", msgtypeinfo);
+        msg_print("/connect\n/join <room_name>\n/listusers\n/pm <user_name> <msg>\n"
+                "/nick <nick_name>\n/leaveroom\n/quit\n", msgtypeinfo);
     else if (!strcmp(input, "!#quit")) {
         if (!gsendfd)
             gsendfd = createsocket(&sendaddr, "any", SERVPORT, UDP, B_NO);
@@ -155,7 +164,7 @@ void parseandprint(char *str, int *recvfd) {
             } else if (!strcmp(token, "drop")) {
                 add_memship(recvfd, gmcastaddr, FALSE);
                 msg_print("Disconnected from current room\n", msgtypeinfo);
-                gflagstatus = notinroom;
+                gflagstatus = availforpm;
                 break;
             } else if (!strcmp(token, "name")) {
                 token = strtok(NULL, search);
@@ -175,8 +184,7 @@ void parseandprint(char *str, int *recvfd) {
                 token = strtok(NULL, search);
                 //printf("Assigned id is - %s\n", token);
                 cliid = (int) strtol(token, NULL, 10);
-                gflagstatus = inroom;
-                msg_print("You can now start chatting\n", msgtypeinfo);
+                gflagstatus = availforpm;
                 break;
             } else if (!strcmp(token, "roomsfull")) {
                 msg_print("All rooms full! PLease try after some time\n", msgtypeerr);
@@ -215,8 +223,12 @@ void parseandprint(char *str, int *recvfd) {
                     progerror("close send error");
                 gsendfd = 0;
                 break;
-            } else if (!strcmp(token, "ping")) {
+            } else if (!strcmp(token, "ping") && gflagstatus != notinroom) {
                 pinghandler();
+                break;
+            } else if (!strcmp(token, "inroom")) {
+                gflagstatus = inroom;
+                msg_print("You can now start chatting\n", msgtypeinfo);
                 break;
             }
         } else if(!strcmp(token, "#pm#")) {
@@ -225,7 +237,8 @@ void parseandprint(char *str, int *recvfd) {
             fflush(stdout);
         }
         else {
-            if(gflagstatus == notinroom) {
+            if(!PMflag)
+            if(gflagstatus == notinroom || gflagstatus == availforpm) {
                 admflag = TRUE;
                 break;
             }
@@ -289,12 +302,11 @@ void worker() {
         strcpy(clicache.lasttypedmsg, usrstr);
         if (gflagstatus == notinroom || *usrstr == '/' || *usrstr == '!') {
             returnstatus = servcommand(usrstr);
-            if (returnstatus == 0)
-                continue; //dont send command thru multicast, just continue loop
+            if (gflagstatus == exitprog)
+                break;
+            continue; //dont send command thru multicast, just continue loop
         }
         //printf("after replace, entered string is %s\n", usrstr);
-        if (gflagstatus == exitprog)
-            break;
         sprintf(sendline, "%s:%s", rndname, usrstr);
         sendpkt(gmcastaddr, sendline, MRECVPORT);
     }

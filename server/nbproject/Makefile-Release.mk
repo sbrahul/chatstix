@@ -31,7 +31,6 @@ OBJECTDIR=build/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
-	${OBJECTDIR}/src/timeout.o \
 	${OBJECTDIR}/src/chatstixmain.o \
 	${OBJECTDIR}/src/globals.o \
 	${OBJECTDIR}/src/otherfns.o \
@@ -60,11 +59,6 @@ LDLIBSOPTIONS=
 dist/Release/GNU-Linux-x86/chatstixsrv: ${OBJECTFILES}
 	${MKDIR} -p dist/Release/GNU-Linux-x86
 	${LINK.c} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/chatstixsrv ${OBJECTFILES} ${LDLIBSOPTIONS} 
-
-${OBJECTDIR}/src/timeout.o: nbproject/Makefile-${CND_CONF}.mk src/timeout.c 
-	${MKDIR} -p ${OBJECTDIR}/src
-	${RM} $@.d
-	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/src/timeout.o src/timeout.c
 
 ${OBJECTDIR}/src/chatstixmain.o: nbproject/Makefile-${CND_CONF}.mk src/chatstixmain.c 
 	${MKDIR} -p ${OBJECTDIR}/src
