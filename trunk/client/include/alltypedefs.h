@@ -8,7 +8,8 @@ typedef int BOOL;
 
 typedef enum {
     notinroom = 0,
-    inroom = 1,
+    inroom,
+    availforpm,
     exitprog = -1
 } clientstate;
 
