@@ -11,5 +11,6 @@ void parseandprint(char *str, int *recvfd);
 void *fnthreadr(void *params);
 void worker();
 void pinghandler();
+void outputmessage(MsgType msgtype, char *name, char *message, int pointeroffset);
 
 #endif /*ALLFNPROTOS_H_*/

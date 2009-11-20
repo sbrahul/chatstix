@@ -121,15 +121,12 @@ int getmultiaddr(char *cbuf, char *addr, int clientid) {
 }
 
 //fill in the infostr associated with the index
-void filluserinfo(int cid, int roomn, char *rid, char *ipaddr){
-    if(infostr[cid].inuse == 0) {
+void filluserinfo(int cid, char *rid, char *ipaddr){
         infostr[cid].inuse = 1;
         infostr[cid].cliname = (char *) malloc(NAMELEN * sizeof (char));
         strcpy(infostr[cid].cliname, rid);
         infostr[cid].cliipaddr = (char *) malloc(16 * sizeof (char));
         strcpy(infostr[cid].cliipaddr, ipaddr);
-    }
-    infostr[cid].room = roomn;
 }
 
 //add a user to the clientlist in mroomstr
@@ -270,7 +267,7 @@ void namechange(char *cbuf) {
     id = (int) strtol(token, NULL, 10); //parse client id from msg
     token = strtok(NULL, delimiter);
     if(finduser(token) != -1)
-        sprintf(pkt, "#adm#:%d:name:%s", id, infostr[id].cliname); //name exists, retain name
+        sprintf(pkt, "#adm#:%d:name:#", id); //name exists, retain name
     else { //change name to desired one
         free(infostr[id].cliname);
         infostr[id].cliname = (char *) malloc(strlen(token) * sizeof(char));
@@ -318,30 +315,54 @@ void getipofcli(char *cbuf, char *ipaddr) {
     sendpkt(ipaddr, pkt, SENDPORT);
 }
 
-//handle /join from user
+//handle /connect from user
 
-void joinuser(char *cbuf, char *ipaddr) {
-    char multiaddr[16], pkt[30], *token, *delimiter = ":";
-    int cid, roomn, idinpackettobesent;
-    char rid[MAXNAMELEN];
+int connectuser(char *ipaddr, char *name) {
+    char pkt[30], rid[MAXNAMELEN];
+    int cid;
     struct timeval tv;
-    token = strchr(cbuf, ':');
-    if(token !=NULL) {
-        token = strtok(cbuf, delimiter);
-        token = strtok(NULL, delimiter);
-        cid = (int) strtol(token, NULL, 10); //parse client id from msg
-        idinpackettobesent = cid;
-    }
-    else {
-        cid = findfreeuserslot(); //get index of first free cliinfostr
-        idinpackettobesent = -1;
-    }
+    cid = findfreeuserslot(); //get index of first free cliinfostr
     printf("id assigned is - %d\n", cid);
     if (cid == -1) //all client slots full
     {
         sprintf(pkt, "#adm#:-1:clientsfull");
         sendpkt(ipaddr, pkt, SENDPORT);
-        return;
+        return -1;
+    }
+    crandgen(rid);
+    sprintf(pkt, "#adm#:-1:name:%s", rid);
+    usleep(500000);
+    sendpkt(ipaddr, pkt, SENDPORT);
+    usleep(500000);
+    sprintf(pkt, "#adm#:-1:id:%d", cid);
+    sendpkt(ipaddr, pkt, SENDPORT);
+    if(name != NULL)
+        strcpy(name, rid);
+    gettimeofday(&tv, NULL);
+    infostr[cid].lastping = tv.tv_sec;
+    filluserinfo(cid, rid, ipaddr);
+
+    return cid;
+}
+
+//handle /join from user
+
+void joinuser(char *cbuf, char *ipaddr) {
+    char multiaddr[16], pkt[30], *token, *delimiter = ":";
+    int cid, roomn;
+    BOOL newuser = TRUE;
+    char rid[MAXNAMELEN];
+    token = strchr(cbuf, ':');
+    if(token !=NULL) {
+        token = strtok(cbuf, delimiter);
+        token = strtok(NULL, delimiter);
+        cid = (int) strtol(token, NULL, 10); //parse client id from msg
+        newuser = FALSE;
+    }
+    else {
+        cid = connectuser(ipaddr, rid);
+        if(cid == -1)
+            return;
     }
     roomn = getmultiaddr(cbuf, multiaddr, cid);
     if (!strcmp(multiaddr, "roomsfull")) //room limit reached
@@ -355,28 +376,15 @@ void joinuser(char *cbuf, char *ipaddr) {
     printf("TP:in process_job(), got multicast addr\n");
 #endif
     printf("Allocated %s to %s\n", multiaddr, ipaddr);
-    sprintf(pkt, "#adm#:%d:addr:%s", idinpackettobesent, multiaddr);
+    sprintf(pkt, "#adm#:%d:addr:%s", cid, multiaddr);
     sendpkt(ipaddr, pkt, SENDPORT);
-    if (idinpackettobesent == -1) {
-        crandgen(rid);
-        filluserinfo(cid, roomn, rid, ipaddr);
-        sprintf(pkt, "#adm#:-1:name:%s", rid);
-        usleep(500000);
-        sendpkt(ipaddr, pkt, SENDPORT);
-        usleep(500000);
-        sprintf(pkt, "#adm#:-1:id:%d", cid);
-        sendpkt(ipaddr, pkt, SENDPORT);
-    }
-    else
-        filluserinfo(cid, roomn, NULL, NULL);
+    infostr[cid].room = roomn;
     usleep(500000);
     sprintf(pkt, "#adm#:%d:inroom", cid);
     sendpkt(ipaddr, pkt, SENDPORT);
 #ifdef TRACEPRINT
     printf("TP:in process_job(), packet sent\n");
 #endif
-    gettimeofday(&tv, NULL);
-    infostr[cid].lastping = tv.tv_sec;
 }
 
 //process received messages
@@ -386,7 +394,9 @@ int process_job(char *cbuf, char *ipaddr) {
     printf("TP:in process_job()\n");
 #endif
     //printf("message received is %s\n", cbuf);
-    if (!strncmp(cbuf, "/join", 5))
+    if (!strcmp(cbuf, "/connect"))
+        connectuser(ipaddr, NULL);
+    else if (!strncmp(cbuf, "/joinroom", 9))
         joinuser(cbuf, ipaddr);
     else if (!strncmp(cbuf, "/exit", 5))
         disconnectuser(cbuf, ipaddr);
@@ -400,7 +410,7 @@ int process_job(char *cbuf, char *ipaddr) {
         pinghandler(cbuf);
     else if (!strncmp(cbuf, "/nick", 5))
         namechange(cbuf);
-    else if (!strcmp(cbuf, "!#quit"))
+    else if (!strcmp(cbuf, "!@quit"))
         return 1;
 
     return 0;

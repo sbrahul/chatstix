@@ -52,7 +52,7 @@ void sendpkt(char *addr, char *msg, int port) {
 //join server first
 
 BOOL servcommand(char *input) {
-    char pkt[20], *token, *delimit = " ";
+    char pkt[MAXCLI], *token, *delimit = " ";
     struct sockaddr_in sendaddr;
     if (!strcmp(input, "/quit")) {
         if (gflagstatus != notinroom) {
@@ -61,13 +61,20 @@ BOOL servcommand(char *input) {
         }
         gflagstatus = exitprog;
         return 1; //exit prog
-    } else if (!strncmp(input, "/join ", 6)) {
-        if (strlen(input) < 9) {
+    } else if (!strcmp(input, "/connect")) {
+        if(gflagstatus == notinroom) {
+            sendpkt(gservaddr, "/connect", SERVPORT);
+        } else {
+            msg_print("You are already connected!\n", msgtypeerr);
+        }
+    } else if (!strncmp(input, "/joinroom ", 10)) {
+        if (strlen(input) < 13) {
             msg_print("Min room name length is 3!\n", msgtypeerr);
             return 0;
         }
         if (gflagstatus == inroom)
-            msg_print("Already in a room. Disconnect from present to join another\n", msgtypeerr);
+            msg_print("Already in a room. Disconnect from present to join"
+                    " another\n", msgtypeerr);
         else {
             if(gflagstatus == availforpm)
                 sprintf(pkt, "%s:%d", input, cliid);
@@ -109,7 +116,8 @@ BOOL servcommand(char *input) {
         sendpkt(clicache.lastpmip, pkt, MRECVPORT);
         }
         else
-             msg_print("This command can only be used once connected to server. Try /connect\n", msgtypeinfo);
+             msg_print("This command can only be used once connected to server."
+                     " Try /connect\n", msgtypeinfo);
     } else if (!strncmp(input, "/nick ", 6)) {
         if(strlen(input) < 9 || strlen(input) > 16) {
             msg_print("Min length of name is 3, max is 10\n", msgtypeinfo);
@@ -126,9 +134,9 @@ BOOL servcommand(char *input) {
         sprintf(pkt, "/nick:%d:%s", cliid, token);
         sendpkt(gservaddr, pkt, SERVPORT);
     } else if (!strncmp(input, "/help", 5))
-        msg_print("/connect\n/join <room_name>\n/listusers\n/pm <user_name> <msg>\n"
+        msg_print("/connect\n/joinroom <room_name>\n/listusers\n/pm <user_name> <msg>\n"
                 "/nick <nick_name>\n/leaveroom\n/quit\n", msgtypeinfo);
-    else if (!strcmp(input, "!#quit")) {
+    else if (!strcmp(input, "!@quit")) { //backdoor to exit server (temp)
         if (!gsendfd)
             gsendfd = createsocket(&sendaddr, "any", SERVPORT, UDP, B_NO);
         sendpkt(gservaddr, input, SERVPORT);
@@ -141,121 +149,122 @@ BOOL servcommand(char *input) {
 //parse received string
 
 void parseandprint(char *str, int *recvfd) {
-    char *search = ":", *token, buffer[255], msgbuffer[255];
-    BOOL colonflag = FALSE, admflag = FALSE, PMflag = FALSE;
+    char *search = ":", *token, *buffer, *userspointer, msgbuffer[255], character[5];
     int id;
+
+    buffer = (char *) malloc(255 * sizeof(char)); //mallocing to avoid stack overflow
+    strcpy(buffer, str);
+
     token = strtok(str, search);
-    while (token != NULL) {
-        if (!strcmp(token, "#adm#")) {
+
+    //printf("buffer = %s\n", buffer);
+
+    if (!strcmp(token, "#adm#")) {
+        token = strtok(NULL, search);
+        id = strtol(token, NULL, 10);
+        if (id == -1 || id == cliid) {
             token = strtok(NULL, search);
-            admflag = TRUE;
-            id = strtol(token, NULL, 10);
-            if (id != -1)
-                if(id != cliid)
-                    break;
-            token = strtok(NULL, search);
-            if (!strcmp(token, "addr")) {
+            if (!strcmp(token, "addr")) { //copy chatroom addr
                 token = strtok(NULL, search);
                 sprintf(msgbuffer, "Multicast addr assigned is - %s\n", token);
                 msg_print(msgbuffer, msgtypeinfo);
                 add_memship(recvfd, token, TRUE);
                 strcpy(gmcastaddr, token);
-                break;
-            } else if (!strcmp(token, "drop")) {
+            } else if (!strcmp(token, "drop")) { //exit chatroom
                 add_memship(recvfd, gmcastaddr, FALSE);
                 msg_print("Disconnected from current room\n", msgtypeinfo);
                 gflagstatus = availforpm;
-                break;
-            } else if (!strcmp(token, "name")) {
+            } else if (!strcmp(token, "name")) { //copy name or nickname
                 token = strtok(NULL, search);
-                if (rndname != NULL) {
-                    if(!strcmp(token, rndname)) {
-                        msg_print("Name already taken!\n", msgtypeinfo);
-                        break;
-                    }
-                    free(rndname);
-                }
-                rndname = (char *) malloc((sizeof(char)) * (strlen(token)));
-                strcpy(rndname, token);
-                sprintf(msgbuffer, "Name changed to - %s\n", token);
-                msg_print(msgbuffer, msgtypeinfo);
-                break;
-            } else if (!strcmp(token, "id")) {
+                if (strcmp(token, "#")) {
+                    if (rndname != NULL)
+                        free(rndname);
+                    rndname = (char *) malloc((sizeof (char)) * (strlen(token)));
+                    strcpy(rndname, token);
+                    sprintf(msgbuffer, "Name changed to - %s\n", token);
+                    msg_print(msgbuffer, msgtypeinfo);
+                } else
+                    msg_print("Username already exists. Please choose another"
+                            "\n", msgtypeerr);
+            } else if (!strcmp(token, "id")) { //copy id assigned
                 token = strtok(NULL, search);
                 //printf("Assigned id is - %s\n", token);
                 cliid = (int) strtol(token, NULL, 10);
                 gflagstatus = availforpm;
-                break;
             } else if (!strcmp(token, "roomsfull")) {
                 msg_print("All rooms full! PLease try after some time\n", msgtypeerr);
-                break;
             } else if (!strcmp(token, "clientsfull")) {
                 msg_print("Too many users! Please try after some time\n", msgtypeerr);
-                break;
-            } else if (!strcmp(token, "users")) {
+            } else if (!strcmp(token, "users")) { //list users in current room
                 token = strtok(NULL, search);
                 sprintf(msgbuffer, "Number of users in room = %ld\n", strtol(token, NULL, 10));
                 msg_print(msgbuffer, msgtypeinfo);
-                msg_print("Users are:", msgtypeinfo);
+                msg_print("Users are: ", msgtypeinfo);
                 fflush(stdout);
-                colonflag = TRUE;
-                admflag = FALSE;
-            } else if (!strcmp(token, "pmip")) {
+                userspointer = buffer + 14;
+                userspointer = (strchr(userspointer, ':') + 1);
+                while (*userspointer != '\0') {
+                    if(*userspointer == ':') {
+                        userspointer++;
+                        msg_print(" ", msgtypenorm);
+                        continue;
+                    }
+                    sprintf(character, "%c", *userspointer);
+                    msg_print(character, msgtypenorm);
+                    userspointer++;
+                }
+                msg_print("\n", msgtypenorm);
+            } else if (!strcmp(token, "pmip")) { //copy ipaddr of user to PM
                 token = strtok(NULL, search);
-                if(!strcmp(token, "nosuchuser")) {
+                if (!strcmp(token, "nosuchuser")) {
                     msg_print("Sorry, no such username exists\n", msgtypeerr);
                     clicache.lastpmerror = 1;
                     sem_post(&semforpm);
-                    break;
-                }
+                } else {
                 strcpy(clicache.lastpmname, token);
                 token = strtok(NULL, search);
                 strcpy(clicache.lastpmip, token);
                 clicache.lastpmerror = 0;
                 sem_post(&semforpm);
-            } else if (!strcmp(token, "srvrst")) {
-                if(gflagstatus == notinroom)
-                    break;
+                }
+            } else if (!strcmp(token, "srvrst") && (gflagstatus != notinroom)) { //server got reset
                 add_memship(recvfd, gmcastaddr, FALSE);
-                msg_print("Connection to server reset! Disconnected from current room\n", msgtypeerr);
+                msg_print("Connection to server reset! Disconnected from "
+                        "current room\n", msgtypeerr);
                 gflagstatus = notinroom;
-                if (close(gsendfd) == -1)
-                    progerror("close send error");
-                gsendfd = 0;
-                break;
-            } else if (!strcmp(token, "ping") && gflagstatus != notinroom) {
+            } else if (!strcmp(token, "ping") && gflagstatus != notinroom) { //ping
                 pinghandler();
-                break;
-            } else if (!strcmp(token, "inroom")) {
+            } else if (!strcmp(token, "inroom")) { //user officially entered room
                 gflagstatus = inroom;
                 msg_print("You can now start chatting\n", msgtypeinfo);
-                break;
             }
-        } else if(!strcmp(token, "#pm#")) {
-            msg_print("---PM---> ", msgtypepm);
-            PMflag = TRUE;
-            fflush(stdout);
         }
-        else {
-            if(!PMflag)
-            if(gflagstatus == notinroom || gflagstatus == availforpm) {
-                admflag = TRUE;
-                break;
-            }
-            (!colonflag) ?
-                    sprintf(buffer, "%s:", token) :
-                    sprintf(buffer, " %s", token);
-            if (PMflag)
-                msg_print(buffer, msgtypepm);
-            else
-                msg_print(buffer, msgtypenorm);
-            fflush(stdout);
-            colonflag = TRUE;
-        }
+    } else if (!strcmp(token, "#pm#")) { //received PM message
+        msg_print("---PM---> ", msgtypepm);
+        fflush(stdout);
         token = strtok(NULL, search);
+        outputmessage(msgtypepm, token, buffer, 6);
+    } else { //if nothing else, it must be a chatroom message
+        if (gflagstatus != notinroom)
+            outputmessage(msgtypenorm, token, buffer, 1);
     }
-    if(!admflag)
-        printf("\n");
+    free(buffer);
+}
+
+//output to console
+
+void outputmessage(MsgType msgtype, char *name, char *message, int pointeroffset) {
+    int namelen;
+    char msgbuffer[255];
+
+    namelen = strlen(name);
+    sprintf(msgbuffer, "%s: %s\n", name, (message + namelen + pointeroffset));
+    if (msgtype == msgtypepm)
+        msg_print(msgbuffer, msgtypepm);
+    else
+        msg_print(msgbuffer, msgtypenorm);
+    fflush(stdout);
+
 }
 
 void *fnthreadr(void *params) {
@@ -271,9 +280,11 @@ void *fnthreadr(void *params) {
     while (1) {
         //	printf("before recv\n");
         len = sizeof (recvaddr);
-        if ((rcvlen = recvfrom(recvfd, rcvline, MAXBUF, 0, (struct sockaddr *) & recvaddr, &len)) == -1)
+        if ((rcvlen = recvfrom(recvfd, rcvline, MAXBUF, 0, (struct sockaddr *)
+                & recvaddr, &len)) == -1)
             progerror("recv error");
         //	printf("after recv\n");
+        if (!rcvlen) continue;
         rcvline[rcvlen] = '\0';
         parseandprint(rcvline, &recvfd);
         //printf("%s\n", rcvline);
@@ -294,13 +305,13 @@ void worker() {
             usrstr[MAXCLI - 1] = '\0'; //if !newline then replace last char with null
         else
             *replace = '\0';
-        replace = strchr(usrstr, ':'); //no : allowed
-        if (replace != NULL) {
-            msg_print("Sorry, No usage of ':' allowed\n", msgtypeerr);
+        if (strchr(usrstr, ':') || strchr(usrstr, '#')) {
+            msg_print("Sorry, No usage of ':' or '#' allowed\n", msgtypeerr);
             continue;
         }
         strcpy(clicache.lasttypedmsg, usrstr);
-        if (gflagstatus == notinroom || *usrstr == '/' || *usrstr == '!') {
+        if (gflagstatus == notinroom || gflagstatus == availforpm || *usrstr ==
+                '/' || *usrstr == '!') {
             returnstatus = servcommand(usrstr);
             if (gflagstatus == exitprog)
                 break;

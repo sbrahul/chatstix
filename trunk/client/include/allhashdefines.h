@@ -11,7 +11,7 @@
 #define MRECVPORT 8007
 #define SERVPORT 9107
 #define MAXNAMELEN 10
-#define MAXCLI 30
+#define MAXCLI 255
 //#define MLOOPBACK
 
 #endif /*ALLHASHDEFINES_H_*/
