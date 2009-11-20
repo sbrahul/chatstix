@@ -19,7 +19,7 @@ int findroom(char *roomname, int *roomnum);
 void createroom(char *rname, int rnum);
 int findfreeuserslot();
 int getmultiaddr(char *cbuf, char *addr, int clientid);
-void filluserinfo(int cid, int roomn, char *rid, char *ipaddr);
+void filluserinfo(int cid, char *rid, char *ipaddr);
 void addusertoroomlist(int cid, int roomn);
 void removeuserfromroomlist(int cid, int roomn);
 void populateroom();
@@ -33,5 +33,6 @@ void job_worker();
 void *threcvfn(void *targs);
 void setalarm();
 void pinghandler(char *input);
+int connectuser(char *ipaddr, char *name);
 
 #endif /*ALLFNPROTOS_H_*/
