@@ -5,20 +5,13 @@
 
 ===Compiling===
 
-The source files are located in the _src_ folder while the header files are in the _include_ folder.
-If _gcc_ is used to compile the code, then the command is:
+To compile, just run the Makefile in the _client_ or _server_ folder.
 {{{
-gcc *.c -lpthread -o srv
+make
 }}}
-The project uses pthread libraries which have to be specified during compiliation.
-_srv_ is the output file.
+The compiled binary will be stored in _dist/Debug/GNU-Linux-x86_ folder.
 
-Same goes for the client,
-{{{
-gcc *.c -lpthread -o cli
-}}}
-
-(These commands have to be executed inside the _src_ folder. If executing from outside, then the appropriate directory has to be specified)
+(Note: gcc must be installed for successful compilation).
 
 ===Executing===
 
