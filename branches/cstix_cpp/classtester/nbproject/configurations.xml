@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurationDescriptor version="62">
+  <logicalFolder name="root" displayName="root" projectFiles="true">
+    <logicalFolder name="HeaderFiles"
+                   displayName="Header Files"
+                   projectFiles="true">
+      <itemPath>includes/CStixAbstractList.h</itemPath>
+      <itemPath>includes/CStixAbstractProgramExternalizer.h</itemPath>
+      <itemPath>includes/CStixChatRoom.h</itemPath>
+      <itemPath>includes/CStixCmdlineProgramExternalizer.h</itemPath>
+      <itemPath>includes/CStixException.h</itemPath>
+      <itemPath>includes/CStixGlobals.h</itemPath>
+      <itemPath>includes/CStixIncludes.h</itemPath>
+      <itemPath>includes/CStixList.h</itemPath>
+      <itemPath>includes/CStixMessageQ.h</itemPath>
+      <itemPath>includes/CStixRoomManager.h</itemPath>
+      <itemPath>includes/CStixSemaphore.h</itemPath>
+      <itemPath>includes/CStixSocket.h</itemPath>
+      <itemPath>includes/CStixSystem.h</itemPath>
+      <itemPath>includes/CStixThread.h</itemPath>
+      <itemPath>includes/CStixThreadFns.h</itemPath>
+      <itemPath>includes/CStixUtil.h</itemPath>
+    </logicalFolder>
+    <logicalFolder name="SourceFiles"
+                   displayName="Source Files"
+                   projectFiles="true">
+      <itemPath>src/CStixAbstractProgramExternalizer.cpp</itemPath>
+      <itemPath>src/CStixChatRoom.cpp</itemPath>
+      <itemPath>src/CStixCmdlineProgramExternalizer.cpp</itemPath>
+      <itemPath>src/CStixException.cpp</itemPath>
+      <itemPath>src/CStixGlobals.cpp</itemPath>
+      <itemPath>src/CStixMessageQ.cpp</itemPath>
+      <itemPath>src/CStixRoomManager.cpp</itemPath>
+      <itemPath>src/CStixSemaphore.cpp</itemPath>
+      <itemPath>src/CStixSocket.cpp</itemPath>
+      <itemPath>src/CStixSystem.cpp</itemPath>
+      <itemPath>src/CStixThread.cpp</itemPath>
+      <itemPath>src/CStixThreadFns.cpp</itemPath>
+      <itemPath>src/CStixUtil.cpp</itemPath>
+      <itemPath>src/main.cpp</itemPath>
+    </logicalFolder>
+    <logicalFolder name="ExternalFiles"
+                   displayName="Important Files"
+                   projectFiles="false">
+      <itemPath>Makefile</itemPath>
+    </logicalFolder>
+  </logicalFolder>
+  <sourceRootList>
+    <Elem>src</Elem>
+    <Elem>includes</Elem>
+  </sourceRootList>
+  <projectmakefile>Makefile</projectmakefile>
+  <confs>
+    <conf name="Debug" type="1">
+      <toolsSet>
+        <developmentServer>localhost</developmentServer>
+        <compilerSet>Cygwin|Cygwin</compilerSet>
+        <platform>3</platform>
+      </toolsSet>
+      <compileType>
+        <ccTool>
+          <commandLine>-Wall</commandLine>
+        </ccTool>
+        <linkerTool>
+          <linkerLibItems>
+            <linkerLibStdlibItem>PosixThreads</linkerLibStdlibItem>
+          </linkerLibItems>
+        </linkerTool>
+      </compileType>
+    </conf>
+    <conf name="Release" type="1">
+      <toolsSet>
+        <developmentServer>localhost</developmentServer>
+        <compilerSet>GNU|GNU</compilerSet>
+        <platform>2</platform>
+      </toolsSet>
+      <compileType>
+        <cTool>
+          <developmentMode>5</developmentMode>
+        </cTool>
+        <ccTool>
+          <developmentMode>5</developmentMode>
+        </ccTool>
+        <fortranCompilerTool>
+          <developmentMode>5</developmentMode>
+        </fortranCompilerTool>
+        <linkerTool>
+          <linkerLibItems>
+          </linkerLibItems>
+        </linkerTool>
+      </compileType>
+    </conf>
+  </confs>
+</configurationDescriptor>
