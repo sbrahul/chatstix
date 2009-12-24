@@ -17,105 +17,48 @@ CStixRoomManager::~CStixRoomManager() {
     delete this->chatrooms;
 }
 
-void CStixRoomManager::CreateRoom(string roomname, string roomaddr) {
+int CStixRoomManager::CreateRoom(string roomname, string roomaddr) {
+    if (DoesRoomExist(roomname) != -1)
+        return 1; //room already exists
     CStixChatRoom cr;
     cr.SetRoomName(roomname);
     cr.SetRoomAddr(roomaddr);
     //cr.AddToClientList("user pre def");
     this->chatrooms->Add(cr);
     this->numofrooms++;
+    return 0;
 }
 
-void CStixRoomManager::AddUserToRoom(string username, string roomname) {
+int CStixRoomManager::AddUserToRoom(string username, string roomname) {
     list<CStixChatRoom>::iterator cr;
+    int itval;
 
-    bool flag = false;
-    int i = 0;
-    cout<<"##In CStixRoomManager::AddUserToRoom, username, roomname"
-            " = " << username << " for " << roomname << endl;
-    for (i = 0; i < this->numofrooms; i++) {
-        cr = (this->chatrooms->GetIteratorAt(i));
-        //cout << "roomname = " << (*cr).GetRoomName() <<endl;
-        if (roomname == (*cr).GetRoomName()) {
-            flag = true;
-            break;
-        }
-    }
-    if (flag == true) {
-        (*cr).AddToClientList(username);
-//        printf("addr of cr = %x\n", &cr);
-        list<CStixChatRoom>::iterator temp = this->chatrooms->GetIteratorAt(i);
-//        printf("addr of temp = %x\n", &temp);
-        cout << "after adding client, "
-                "numofusers in addusertoroom() = " << (*temp).GetNumOfUsers() <<endl;
-    }
-    else {
-        CStixUtil::ProgError("In CStixRoomManager::AddUserToRoom, "
-            "roomname " + roomname + " does not exist!");
-    }
+    if ((itval = DoesRoomExist(roomname)) == -1)
+        return 1; //room not found
 
+    cr = (this->chatrooms->GetIteratorAt(itval));
+    (*cr).AddToClientList(username);
+    //        printf("addr of cr = %x\n", &cr);
+    //list<CStixChatRoom>::iterator temp = this->chatrooms->GetIteratorAt(i);
+    //        printf("addr of temp = %x\n", &temp);
+    //cout << "after adding client, "
+    //        "numofusers in addusertoroom() = " << (*temp).GetNumOfUsers() <<endl;
+    return 0;
 }
 
-void CStixRoomManager::RemoveUserFromRoom(string username, string roomname) {
+int CStixRoomManager::RemoveUserFromRoom(string username, string roomname) {
     list<CStixChatRoom>::iterator cr;
-    bool flag = false;
-    
-    for (int i = 1; i <= this->numofrooms; i++) {
-        cr = (this->chatrooms->GetIteratorAt(i));
-        if (roomname == (*cr).GetRoomName()) {
-            flag = true;
-            break;
-        }
-    }
-    if (flag == true)
-        (*cr).RemoveFromClientList(username);
-    else
-        CStixUtil::ProgError("In CStixRoomManager::RemoveUserFromRoom, "
-        "roomname specidied doesnt not exist!");
+    int itval;
+
+    if ((itval = DoesRoomExist(roomname)) == -1)
+        return 1; //room not found
+
+    cr = (this->chatrooms->GetIteratorAt(itval));
+    (*cr).RemoveFromClientList(username);
+    return 0;
 }
 
-
-bool CStixRoomManager::DoesRoomExist(string roomname) {
-    list<CStixChatRoom>::iterator cr;
-    bool flag;
-    
-    for (int i = 1; i <= this->numofrooms; i++) {
-        cr = (this->chatrooms->GetIteratorAt(i));
-        if (roomname == (*cr).GetRoomName()) {
-            flag = true;
-            break;
-        }
-    }
-    if (flag == true)
-        return true;
-
-    return false;
-}
-
-string CStixRoomManager::ListUsersinRoom(string roomname) {
-    list<CStixChatRoom>::iterator cr;
-    bool flag = false;
-    string returnstr;
-
-    for (int i = 1; i <= this->numofrooms; i++) {
-        cr = (this->chatrooms->GetIteratorAt(i));
-        if (roomname == (*cr).GetRoomName()) {
-            flag = true;
-            break;
-        }
-    }
-    if (flag == true) {
-        cout << "in ListUsersinRoom(), numousers = "<< (*cr).GetNumOfUsers() <<endl;
-        returnstr = (*cr).ListUsers();
-    }
-    else
-        CStixUtil::ProgError("In CStixRoomManager::ListUsersinRoom, "
-        "roomname specidied doesnt not exist!");
-
-    return returnstr;
-}
-
-void CStixRoomManager::DeleteRoom(string roomname) {
+int CStixRoomManager::DoesRoomExist(string roomname) {
     list<CStixChatRoom>::iterator cr;
     bool flag = false;
     int i;
@@ -127,11 +70,35 @@ void CStixRoomManager::DeleteRoom(string roomname) {
             break;
         }
     }
-    if (flag == true) {
-        this->chatrooms->DeleteAt(i);
-        this->numofrooms--;
-    }
-    else
-        CStixUtil::ProgError("In CStixRoomManager::AddUserToRoom, "
-        "roomname specidied doesnt not exist!");
+    if (flag == true)
+        return i; //if room exists, return iterator index
+
+    return -1; //room not found
+}
+
+string CStixRoomManager::ListUsersinRoom(string roomname) {
+    list<CStixChatRoom>::iterator cr;
+    string returnstr;
+    int itval;
+
+    if ((itval = DoesRoomExist(roomname)) == -1)
+        return "noroom"; //room not found
+
+    cr = (this->chatrooms->GetIteratorAt(itval));
+    //cout << "in ListUsersinRoom(), numousers = "<< (*cr).GetNumOfUsers() <<endl;
+    returnstr = (*cr).ListUsers();
+
+    return returnstr;
+}
+
+int CStixRoomManager::DeleteRoom(string roomname) {
+    list<CStixChatRoom>::iterator cr;
+    int itval;
+
+    if ((itval = DoesRoomExist(roomname)) == -1)
+        return 1; //room not found
+
+    this->chatrooms->DeleteAt(itval);
+    this->numofrooms--;
+    return 0;
 }

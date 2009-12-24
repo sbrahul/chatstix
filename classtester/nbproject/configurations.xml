@@ -19,12 +19,13 @@
       <itemPath>includes/CStixSystem.h</itemPath>
       <itemPath>includes/CStixThread.h</itemPath>
       <itemPath>includes/CStixThreadFns.h</itemPath>
+      <itemPath>includes/CStixUser.h</itemPath>
+      <itemPath>includes/CStixUserManager.h</itemPath>
       <itemPath>includes/CStixUtil.h</itemPath>
     </logicalFolder>
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
-      <itemPath>src/CStixAbstractProgramExternalizer.cpp</itemPath>
       <itemPath>src/CStixChatRoom.cpp</itemPath>
       <itemPath>src/CStixCmdlineProgramExternalizer.cpp</itemPath>
       <itemPath>src/CStixException.cpp</itemPath>
@@ -36,6 +37,8 @@
       <itemPath>src/CStixSystem.cpp</itemPath>
       <itemPath>src/CStixThread.cpp</itemPath>
       <itemPath>src/CStixThreadFns.cpp</itemPath>
+      <itemPath>src/CStixUser.cpp</itemPath>
+      <itemPath>src/CStixUserManager.cpp</itemPath>
       <itemPath>src/CStixUtil.cpp</itemPath>
       <itemPath>src/main.cpp</itemPath>
     </logicalFolder>
@@ -54,8 +57,8 @@
     <conf name="Debug" type="1">
       <toolsSet>
         <developmentServer>localhost</developmentServer>
-        <compilerSet>Cygwin|Cygwin</compilerSet>
-        <platform>3</platform>
+        <compilerSet>GNU|GNU</compilerSet>
+        <platform>2</platform>
       </toolsSet>
       <compileType>
         <ccTool>

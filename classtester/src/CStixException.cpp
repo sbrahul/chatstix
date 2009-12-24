@@ -5,9 +5,8 @@
  * Created on December 23, 2009, 10:50 AM
  */
 
-#include <string>
-#include "../includes/CStixException.h"
-#include <iostream>
+#include "../includes/CStixIncludes.h"
+
 using namespace std;
 
 CStixException::CStixException(string s) {

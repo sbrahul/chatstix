@@ -5,17 +5,7 @@
  * Created on December 23, 2009, 10:38 AM
  */
 
-#include "../includes/CStixCmdlineProgramExternalizer.h"
-
-CStixCmdlineProgramExternalizer::CStixCmdlineProgramExternalizer() {
-}
-
-CStixCmdlineProgramExternalizer::CStixCmdlineProgramExternalizer(
-        const CStixCmdlineProgramExternalizer& orig) {
-}
-
-CStixCmdlineProgramExternalizer::~CStixCmdlineProgramExternalizer() {
-}
+#include "../includes/CStixIncludes.h"
 
 void CStixCmdlineProgramExternalizer::ProgError(string error) {
     try {
