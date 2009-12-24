@@ -8,7 +8,7 @@
 #ifndef _CSTIXABSTRACTPROGEXT_H
 #define	_CSTIXABSTRACTPROGEXT_H
 
-#include "../includes/CStixIncludes.h"
+#include "CStixIncludes.h"
 
 class CStixAbstractProgramExternalizer {
 public:

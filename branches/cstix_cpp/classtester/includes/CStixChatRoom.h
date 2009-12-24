@@ -10,15 +10,12 @@
 #include "CStixIncludes.h"
 
 class CStixChatRoom {
-
 private:
     string roomname; //room name
     string roomaddr; //multicast addr of room
     CStixAbstractList<string> *clientlist; //list of clients in that room
     int numusers; //number of users in the room
-    void IncreaseUsers();
-    void DecreaseUsers();
-    friend ostream &operator<<(ostream &, const CStixChatRoom &);
+    friend ostream & operator<<(ostream &, const CStixChatRoom &); //overload << operator
 
 
 public:
@@ -31,8 +28,8 @@ public:
     void SetRoomAddr(string addr);
     void AddToClientList(string name);
     void RemoveFromClientList(string name);
-    string ListUsers();
-    int operator==(const CStixChatRoom &rhs) const;
+    string ListUsers(); //return all users in room
+    int operator==(const CStixChatRoom &rhs) const; //overload ==operator
 };
 
 #endif	/* _CSTIXCHATROOM_H */

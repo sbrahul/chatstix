@@ -27,36 +27,28 @@ void CStixChatRoom::SetRoomAddr(string addr) {
     this->roomaddr = addr;
 }
 
-void CStixChatRoom::IncreaseUsers() {
-    this->numusers++;
-}
-
-void CStixChatRoom::DecreaseUsers() {
-    this->numusers--;
-}
-
 void CStixChatRoom::AddToClientList(string name) {
     this->clientlist->Add(name);
-    this->IncreaseUsers();
-    cout << "in addtoclientlist(), numousers = " <<this->numusers<<endl;
+    this->numusers++;
+    //cout << "in addtoclientlist(), numousers = " <<this->numusers<<endl;
 }
 
 void CStixChatRoom::RemoveFromClientList(string name) {
     this->clientlist->Delete(name);
-    this->DecreaseUsers();
+    this->numusers--;
 }
 
 string CStixChatRoom::ListUsers() {
     ostringstream op;
-    cout << "in Listusers(), numusers = " <<this->numusers<<endl;
-    op << this->numusers;                                   //write num of users
-    for (int i = 0; i < this->numusers; i++) {
-        string st = this->clientlist->GetValueAt(i + 1);
-        op << ":" << st;             //write each username
+    //cout << "in Listusers(), numusers = " <<this->numusers<<endl;
+    op << this->numusers; //write num of users
+    for (int i = 1; i <= this->numusers; i++) {
+        string st = this->clientlist->GetValueAt(i);
+        op << ":" << st; //write each username
         //printf("test... ing");
     }
+    //return format: "<num of users>:username1:username2:.."
     return op.str();
-    
 }
 
 string CStixChatRoom::GetRoomName() {
@@ -71,16 +63,14 @@ int CStixChatRoom::GetNumOfUsers() {
     return this->numusers;
 }
 
-ostream &operator<<(ostream &output, const CStixChatRoom &croom)
-{
+ostream & operator<<(ostream &output, const CStixChatRoom &croom) {
     string str = croom.roomname;
     output << str;
-   return output;
+    return output;
 }
 
-int CStixChatRoom::operator==(const CStixChatRoom &rhs) const
-{
+int CStixChatRoom::operator ==(const CStixChatRoom &rhs) const {
     if ((this->roomname) == rhs.roomname)
         return 1;
-   return 0;
+    return 0;
 }

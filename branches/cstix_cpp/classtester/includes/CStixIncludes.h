@@ -38,5 +38,10 @@ using namespace std;
 #include "CStixList.h"
 #include "CStixChatRoom.h"
 #include "CStixRoomManager.h"
+#include "CStixAbstractProgramExternalizer.h"
+#include "CStixCmdlineProgramExternalizer.h"
+#include "CStixException.h"
+#include "CStixUser.h"
+#include "CStixUserManager.h"
 
 #endif	/* _CSTIXINCLUDES_H */

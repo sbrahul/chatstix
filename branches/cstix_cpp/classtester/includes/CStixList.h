@@ -76,10 +76,8 @@ public:
         for (int i = 1; i < loc; ++i)
             it++;
         //T tmp1 = *it;
-        cout << "value in getvalueat() is " << *it <<endl;
-        cout << "loc - " << loc << " List size - " << List.size() << endl;
+        //cout << "value in getvalueat() is " << *it <<endl;
         return *it;
-        //return *(List.begin());
     }
 
 private:

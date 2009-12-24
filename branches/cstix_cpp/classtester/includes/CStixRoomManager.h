@@ -13,11 +13,11 @@ class CStixRoomManager {
 public:
     CStixRoomManager();
     ~CStixRoomManager();
-    void CreateRoom(string roomname, string roomaddr);
-    void DeleteRoom(string roomname);
-    void AddUserToRoom(string username, string roomname);
-    void RemoveUserFromRoom(string username, string roomname);
-    bool DoesRoomExist(string roomname);
+    int CreateRoom(string roomname, string roomaddr);
+    int DeleteRoom(string roomname);
+    int AddUserToRoom(string username, string roomname);
+    int RemoveUserFromRoom(string username, string roomname);
+    int DoesRoomExist(string roomname);
     string ListUsersinRoom(string roomname);
 
 private:

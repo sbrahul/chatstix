@@ -6,8 +6,6 @@
  */
 
 #include "../includes/CStixIncludes.h"
-#include "../includes/CStixAbstractProgramExternalizer.h"
-#include "../includes/CStixCmdlineProgramExternalizer.h"
 using namespace std;
 
 void CStixUtil::ProgError(string errorstr) {
@@ -16,3 +14,6 @@ void CStixUtil::ProgError(string errorstr) {
     progext->ProgError(errorstr);
 }
 
+long CStixUtil::GetTimeElapsed() {
+    return ::clock();
+}

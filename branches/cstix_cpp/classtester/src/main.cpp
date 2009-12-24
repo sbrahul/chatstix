@@ -11,7 +11,7 @@ int main(int argc, char** argv) {
 #if 0
     /*CStixSocket sock(UDP, 9000);
     sock.SendPkt("127.0.0.1", "hello");
-*/
+     */
     ostringstream buf;
     int i;
     CStixMessageQ *MsgQ, *ProducerQ;
@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
     CStixSystem::StartThread(thtype);
     MsgQ = CStixGlobals::getJobQueue();
     ProducerQ = MsgQ;
-    
+
     for (i = 1; i < 6; i++) {
         buf << "127.0.0." << i;
         ProducerQ->AddMsgtoQ("hello", buf.str());
@@ -38,13 +38,39 @@ int main(int argc, char** argv) {
     CStixSystem::WaitForThread(thtype);
 #endif
     CStixRoomManager rm;
-    rm.CreateRoom("Fractal formalism", "56418.54");
-    rm.AddUserToRoom("Mandelbrot", "Fractal formalism");
-    rm.AddUserToRoom("Julia", "Fractal formalism");
-    rm.AddUserToRoom("Hilbert", "Fractal formalism");
-    rm.AddUserToRoom("Dirac", "Fractal formalism");
-    rm.AddUserToRoom("Weirstrass", "Fractal formalism");
-    cout << rm.ListUsersinRoom("Fractal formalism") << endl;
+    CStixUserManager um;
+    if (rm.CreateRoom("room1", "56418.54"))
+        cout << "room exists! give another name\n";
+    if (rm.CreateRoom("room2", "6532"))
+        cout << "room exists! give another name\n";
+    if (rm.AddUserToRoom("user1", "room41"))
+        cout << "room doesnt exist\n";
+    rm.AddUserToRoom("user2", "room1");
+    rm.AddUserToRoom("user3", "room2");
+    rm.AddUserToRoom("user4", "room1");
+    rm.AddUserToRoom("user5", "room2");
+    cout << rm.ListUsersinRoom("room1") << endl;
+    cout << rm.ListUsersinRoom("room2") << endl;
+
+    int retval;
+    if (um.CreateUser("user1", "654335"))
+        cout << "username already exists!\n";
+    if (um.CreateUser("user2", "654335"))
+        cout << "username already exists!\n";
+    if (um.ChangeRoom("user1", "room1"))
+        cout << "username does not exists!\n";
     
+    retval = um.ChangeUsername("user1", "rah");
+    if(retval == -1)
+        cout << "user doesnt exist\n";
+    else if (retval == 1)
+        cout << "name already exists. pick another\n";
+    retval = um.ChangeUsername("user2", "sb");
+    if(retval == -1)
+        cout << "user doesnt exist\n";
+    else if (retval == 1)
+        cout << "name already exists. pick another\n";
+    um.ListAllUsers();
+
     return (EXIT_SUCCESS);
 }
