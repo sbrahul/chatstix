@@ -13,8 +13,8 @@
 
 class CStixCmdlineProgramExternalizer : public CStixAbstractProgramExternalizer {
 public:
-    void ProgError(string error);
-    
+    void ProgError(int errcode);
+    string GetBacktrace();
 private:
 
 };

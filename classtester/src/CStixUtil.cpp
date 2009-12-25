@@ -8,10 +8,10 @@
 #include "../includes/CStixIncludes.h"
 using namespace std;
 
-void CStixUtil::ProgError(string errorstr) {
+void CStixUtil::ProgError(int errcode) {
     CStixAbstractProgramExternalizer *progext =
             new CStixCmdlineProgramExternalizer();
-    progext->ProgError(errorstr);
+    progext->ProgError(errcode);
 }
 
 long CStixUtil::GetTimeElapsed() {

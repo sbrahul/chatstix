@@ -15,19 +15,19 @@ using namespace std;
 void CStixSystem::StartThread(CStixThread &thvar) {
     pthread_t tid;
     if(pthread_create(&(tid), NULL, (thvar.getThreadEntryFunction()), NULL) != 0)
-        CStixUtil::ProgError("thread creation error");
+        CStixUtil::ProgError(SHUTDOWN_THREADCREATIONERROR);
 
     thvar.setThreadID(tid);
 }
 
 void CStixSystem::WaitForThread(CStixThread &thvar) {
     if(pthread_join(thvar.getThreadID(), NULL) != 0)
-        CStixUtil::ProgError("thread join error");
+        CStixUtil::ProgError(SHUTDOWN_THREADJOINERROR);
 }
 
 void CStixSystem::KillThread(CStixThread &thvar) {
     if(pthread_cancel(thvar.getThreadID()) != 0)
-        CStixUtil::ProgError("thread cancel error");
+        CStixUtil::ProgError(SHUTDOWN_THREADCANCELERROR);
 }
 
 /*
@@ -37,7 +37,7 @@ void CStixSystem::KillThread(CStixThread &thvar) {
 void CStixSystem::InitializeSem(CStixSemaphore &semvar, int initval) {
     //SemID tempsemid;
     if(sem_init(&semvar.semid, 0, initval) == -1)
-        CStixUtil::ProgError("Semaphore initialization error");
+        CStixUtil::ProgError(SHUTDOWN_SEMAPHOREINITERROR);
 
     //semvar.setSemID(tempsemid);
 }
