@@ -86,7 +86,8 @@ int main(int argc, char** argv) {
 //    string s("Greet the hellraiser");
 //    msgparser->parseMessage(s);
 
-    (CStixGlobals::server).RegisterCallbacks();
-    (CStixGlobals::server).StartServer();
+    (CStixGlobals::server).init();
+    (CStixGlobals::server).run();
+    (CStixGlobals::server).exit();
     return (EXIT_SUCCESS);
 }

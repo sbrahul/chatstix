@@ -12,7 +12,7 @@ using namespace std;
 
 class CStixUtil {
 public:
-    static void ProgError(string errorstr);
+    static void ProgError(int errcode);
     static long GetTimeElapsed();
 };
 

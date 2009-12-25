@@ -8,8 +8,10 @@
 #include "../includes/CStixServer.h"
 #include "../includes/CStixMessageParser.h"
 #include "../includes/CStixCommunications.h"
+#include "../includes/CStixGlobals.h"
 
 #include <iostream>
+#include <setjmp.h>
 using namespace std;
 
 CStixServer::CStixServer() {
@@ -29,22 +31,38 @@ void CStixServer::RegisterCallbacks() {
     this->ccomms->RegisterMessageReceiveCallback(msgrcvCB);   
 }
 
-void CStixServer::StartServer() {
-    cout << "Attempting to start server" << endl;
-    bool runstate = true;
-    while(runstate) {
-        InitHook(); // Start it off.
-        runstate = false; // use this only to limit runs.
-    }
-}
-
 /*
  * Start receiving messages. Let the callbacks do the rest.
  */
-void CStixServer::InitHook() {
-    this->ccomms->ReceiveMessage();
+void CStixServer::run() {
+    cout << "Attempting to start server." << endl;
+    bool runstate = true;
+    while(runstate) {
+        static int i = 0;
+        int retcode = ::setjmp(CStixGlobals::environment); // Save the environment for error case jumps
+        if (retcode == SHUTDOWN_CLEAN) {
+            // Main processing.
+            this->ccomms->ReceiveMessage();
+            // Simulate error
+            if (++i >= 3)
+                CStixUtil::ProgError(SHUTDOWN_CLEAN);
+        } else { // error code.
+            // Point of loop exit.
+            cout << "Retcode = " << retcode << endl;
+            runstate = false; // use this only to limit runs.
+        }
+    }
+
+}
+
+void CStixServer::init() {
+    this->RegisterCallbacks();   
+    CStixGlobals::init(); // Initialize the globals.
+}
+
+void CStixServer::exit() {
+    CStixGlobals::PrintVerboseError(cout);
 }
 
 CStixServer::~CStixServer() {
 }
-

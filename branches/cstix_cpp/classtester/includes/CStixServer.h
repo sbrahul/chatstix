@@ -21,18 +21,19 @@ class CStixServer {
 public:
     CStixServer();
     CStixServer(const CStixServer& orig);
-    void RegisterCallbacks();
-    void StartServer();
+    void run();
+    void init();
+    void exit();
     virtual ~CStixServer();
 private:
     friend class CStixCallbacks;
     CStixCommunications *ccomms;
-    CStixMessageParser  *msgparser;
+    CStixMessageParser *msgparser;
     //CStixUserManager    *usermgr;
     callback_v2str *loginCB;
     callback_v1csmsg *msgrcvCB;
 
-    void InitHook();
+    void RegisterCallbacks();
 };
 
 #endif	/* _CSTIXSERVER_H */

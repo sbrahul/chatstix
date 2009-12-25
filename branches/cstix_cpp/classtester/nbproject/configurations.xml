@@ -4,6 +4,7 @@
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
+      <itemPath>includes/CStixAbstractDebugHelper.h</itemPath>
       <itemPath>includes/CStixAbstractList.h</itemPath>
       <itemPath>includes/CStixAbstractProgramExternalizer.h</itemPath>
       <itemPath>includes/CStixCallbackTemplate.h</itemPath>
@@ -15,6 +16,7 @@
       <itemPath>includes/CStixGlobals.h</itemPath>
       <itemPath>includes/CStixIncludes.h</itemPath>
       <itemPath>includes/CStixList.h</itemPath>
+      <itemPath>includes/CStixMemorySubsystem.h</itemPath>
       <itemPath>includes/CStixMessage.h</itemPath>
       <itemPath>includes/CStixMessageParser.h</itemPath>
       <itemPath>includes/CStixMessageQ.h</itemPath>
@@ -29,6 +31,7 @@
       <itemPath>includes/CStixUser.h</itemPath>
       <itemPath>includes/CStixUserManager.h</itemPath>
       <itemPath>includes/CStixUtil.h</itemPath>
+      <itemPath>includes/CStixWindowsDebugHelper.h</itemPath>
     </logicalFolder>
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
@@ -39,6 +42,7 @@
       <itemPath>src/CStixCommunications.cpp</itemPath>
       <itemPath>src/CStixException.cpp</itemPath>
       <itemPath>src/CStixGlobals.cpp</itemPath>
+      <itemPath>src/CStixMemorySubsystem.cpp</itemPath>
       <itemPath>src/CStixMessage.cpp</itemPath>
       <itemPath>src/CStixMessageParser.cpp</itemPath>
       <itemPath>src/CStixMessageQ.cpp</itemPath>
@@ -52,6 +56,7 @@
       <itemPath>src/CStixUser.cpp</itemPath>
       <itemPath>src/CStixUserManager.cpp</itemPath>
       <itemPath>src/CStixUtil.cpp</itemPath>
+      <itemPath>src/CStixWindowsDebugHelper.cpp</itemPath>
       <itemPath>src/main.cpp</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"

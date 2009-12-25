@@ -12,7 +12,8 @@
 
 class CStixAbstractProgramExternalizer {
 public:
-    virtual void ProgError(string error) = 0;
+    virtual void ProgError(int errcode) = 0;
+    virtual string GetBacktrace(void) = 0;
 private:
 
 };
