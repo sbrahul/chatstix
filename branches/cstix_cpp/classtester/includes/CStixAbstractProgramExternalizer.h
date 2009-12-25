@@ -1,5 +1,5 @@
 /* 
- * File:   CStixAbstractUtil.h
+ * File:   CStixAbstractProgramExternalizer.h
  * Author: gnarayan
  *
  * Created on December 23, 2009, 10:30 AM
