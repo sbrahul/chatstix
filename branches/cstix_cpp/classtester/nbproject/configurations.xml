@@ -6,19 +6,26 @@
                    projectFiles="true">
       <itemPath>includes/CStixAbstractList.h</itemPath>
       <itemPath>includes/CStixAbstractProgramExternalizer.h</itemPath>
+      <itemPath>includes/CStixCallbackTemplate.h</itemPath>
+      <itemPath>includes/CStixCallbacks.h</itemPath>
       <itemPath>includes/CStixChatRoom.h</itemPath>
       <itemPath>includes/CStixCmdlineProgramExternalizer.h</itemPath>
+      <itemPath>includes/CStixCommunications.h</itemPath>
       <itemPath>includes/CStixException.h</itemPath>
       <itemPath>includes/CStixGlobals.h</itemPath>
       <itemPath>includes/CStixIncludes.h</itemPath>
       <itemPath>includes/CStixList.h</itemPath>
+      <itemPath>includes/CStixMessage.h</itemPath>
+      <itemPath>includes/CStixMessageParser.h</itemPath>
       <itemPath>includes/CStixMessageQ.h</itemPath>
       <itemPath>includes/CStixRoomManager.h</itemPath>
       <itemPath>includes/CStixSemaphore.h</itemPath>
+      <itemPath>includes/CStixServer.h</itemPath>
       <itemPath>includes/CStixSocket.h</itemPath>
       <itemPath>includes/CStixSystem.h</itemPath>
       <itemPath>includes/CStixThread.h</itemPath>
       <itemPath>includes/CStixThreadFns.h</itemPath>
+      <itemPath>includes/CStixTypedefs.h</itemPath>
       <itemPath>includes/CStixUser.h</itemPath>
       <itemPath>includes/CStixUserManager.h</itemPath>
       <itemPath>includes/CStixUtil.h</itemPath>
@@ -26,13 +33,18 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
+      <itemPath>src/CStixCallbacks.cpp</itemPath>
       <itemPath>src/CStixChatRoom.cpp</itemPath>
       <itemPath>src/CStixCmdlineProgramExternalizer.cpp</itemPath>
+      <itemPath>src/CStixCommunications.cpp</itemPath>
       <itemPath>src/CStixException.cpp</itemPath>
       <itemPath>src/CStixGlobals.cpp</itemPath>
+      <itemPath>src/CStixMessage.cpp</itemPath>
+      <itemPath>src/CStixMessageParser.cpp</itemPath>
       <itemPath>src/CStixMessageQ.cpp</itemPath>
       <itemPath>src/CStixRoomManager.cpp</itemPath>
       <itemPath>src/CStixSemaphore.cpp</itemPath>
+      <itemPath>src/CStixServer.cpp</itemPath>
       <itemPath>src/CStixSocket.cpp</itemPath>
       <itemPath>src/CStixSystem.cpp</itemPath>
       <itemPath>src/CStixThread.cpp</itemPath>
@@ -57,8 +69,8 @@
     <conf name="Debug" type="1">
       <toolsSet>
         <developmentServer>localhost</developmentServer>
-        <compilerSet>GNU|GNU</compilerSet>
-        <platform>2</platform>
+        <compilerSet>Cygwin|Cygwin</compilerSet>
+        <platform>3</platform>
       </toolsSet>
       <compileType>
         <ccTool>
