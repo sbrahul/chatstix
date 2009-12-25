@@ -6,6 +6,10 @@
  */
 
 #include "../includes/CStixIncludes.h"
+#include "../includes/CStixMessageParser.h"
+#include "../includes/CStixCommunications.h"
+#include "../includes/CStixCallbacks.h"
+#include "../includes/CStixServer.h"
 
 int main(int argc, char** argv) {
 #if 0
@@ -36,7 +40,7 @@ int main(int argc, char** argv) {
     getchar();
     CStixSystem::KillThread(thtype);
     CStixSystem::WaitForThread(thtype);
-#endif
+
     CStixRoomManager rm;
     CStixUserManager um;
     if (rm.CreateRoom("room1", "56418.54"))
@@ -71,6 +75,18 @@ int main(int argc, char** argv) {
     else if (retval == 1)
         cout << "name already exists. pick another\n";
     um.ListAllUsers();
+#endif
+    // gnarayan tests.
+//    CStixMessageParser *msgparser = new CStixMessageParser;
+//    CStixCallbacks *cbs = new CStixCallbacks();
+//
+//    callback_v2str loginCB(cbs, &CStixCallbacks::LoginCallback);
+//
+//    msgparser->registerLoginCallback(&loginCB);
+//    string s("Greet the hellraiser");
+//    msgparser->parseMessage(s);
 
+    (CStixGlobals::server).RegisterCallbacks();
+    (CStixGlobals::server).StartServer();
     return (EXIT_SUCCESS);
 }

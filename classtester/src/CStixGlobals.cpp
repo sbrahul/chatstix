@@ -18,4 +18,5 @@ CStixMessageQ* CStixGlobals::getJobQueue() {
 
 CStixMessageQ* CStixGlobals::jobQueue = new CStixMessageQ();
 CStixSemaphore CStixGlobals::sem1;
+CStixServer    CStixGlobals::server;
 
